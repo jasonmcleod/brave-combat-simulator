@@ -1,0 +1,24 @@
+{
+    "compilerOptions": {
+      "outDir": "./dist",
+      "rootDir": "./src",
+      "sourceMap": true,
+      "module": "commonjs",
+      "skipLibCheck": true,
+      "target": "es6",
+      "lib": ["es6", "dom"],
+      "types": ["reflect-metadata"],
+      "moduleResolution": "node",
+      "experimentalDecorators": true,
+      "emitDecoratorMetadata": true
+    },
+    "typeRoots": [
+      "../node_modules/@types"
+    ],
+    "include": [
+      "src/**/*",
+    ],
+    "exclude": [
+      "./src/data/maps/*.tsx"
+    ]
+  }
