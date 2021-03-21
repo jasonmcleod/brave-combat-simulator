@@ -8,7 +8,7 @@ export const ATTR_POINTS = 20;
 // create a new blessed UI
 new Screen();
 
-// create a new simulator to dive combat
+// create a new simulator to drive combat
 const sim = new Simulator();
 
 // add a player to the fight
