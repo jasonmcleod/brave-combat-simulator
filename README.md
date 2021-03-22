@@ -16,4 +16,7 @@ $ npm run start
 Game balance is hard as hell. I wrote this thing to help me test different formulas. I'm hoping someone else is better at this than I am, and wants to mess around with these formulas to help balance Brave. 
 
 
+## You formulas
+Check out the getters in `Character.ts`
+
 ![Example](/public/screenshot.png)

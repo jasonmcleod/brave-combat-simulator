@@ -1,6 +1,6 @@
 import * as blessed from 'blessed';
 import { GAME_TICK_SPEED } from '../app';
-import { CharacterType } from '../lib/shared';
+import { CharacterType, HitData, HP_REGEN_RATE } from '../lib/shared';
 import { Util } from '../lib/Util';
 import { Character } from './Character';
 import { Events, SimulatorCreatedEvent, SimulatorCreatedData, SimulatorStoppedData, SimulatorStoppedEvent, SimulatorTickEvent } from './Events';
@@ -11,6 +11,7 @@ export class Simulator {
   public player: Character;
   public foes: Character[] = [];
   private interval: NodeJS.Timeout;
+  private lastHpRegen: number = 0;
   
   constructor() {
     this.UI = blessed.list({
@@ -48,23 +49,31 @@ export class Simulator {
     if(attacker.lastAttackAt <= Date.now() - attacker.attackSpeed) {
       
       // determine the hitValue for this attacker;
-      const hitValue = attacker.attackValue;
+      const attack = attacker.attackData;
       // todo: consider armor
       // const blockValue = target.blockValue;
       
       // add the hit to the combat log
-      this.applyHit(attacker, target, hitValue);
+      this.applyHit(attacker, target, attack);
     }
   }
   
-  applyHit(attacker: Character, target: Character, hitValue: number) {
-    this.UI.add(`${attacker.id ? `NPC ${Util.pad(attacker.id, 3)}` : Util.pad('Player', 4)} hit ${target.id ? `NPC ${Util.pad(target.id, 3)}` : Util.pad('Player', 4)} for ${hitValue}`);
+  applyHit(attacker: Character, target: Character, hitValue: HitData) {
+    this.UI.add(`${attacker.id ? `NPC ${Util.pad(attacker.id, 3)}` : Util.pad('Player', 4)} ${hitValue.crit ? 'CRIT' : 'hit '} ${target.id ? `NPC ${Util.pad(target.id, 3)}` : Util.pad('Player', 4)} for ${hitValue.value}`);
     this.UI.setScrollPerc(100);
-    target.hp -= hitValue;
+    target.hp -= hitValue.value;
     if(target.hp <=0) {        
       target.die();
     }
     attacker.lastAttackAt = Date.now();
+  }
+
+  applyHpRegen(player: Character) {
+    if(this.lastHpRegen <= Date.now() - HP_REGEN_RATE) {
+      player.hp += player.hpRegenRate;
+      player.hp = Math.min(player.hp, player.maxHp);
+      this.lastHpRegen = Date.now();
+    }
   }
   
   process() {
@@ -76,17 +85,20 @@ export class Simulator {
       } else {
         this.stop('Nothing left for player to target')
       }      
-    } 
+    }
     
     // have the player attack its target
     this.attack(this.player, this.player.target);
-    this.player.UI.setText(this.player.getReadout());
+    this.player.UI.setContent(this.player.getReadout());
+
+    // heal the player
+    this.applyHpRegen(this.player);
     
     // loop over all NPCs and let em attack
     for(let n of this.foes) {
       this.attack(n, this.player);
-      n.UI.setText(n.getReadout());
-    }
+      n.UI.setContent(n.getReadout());
+    }   
   }
   
   start() {
